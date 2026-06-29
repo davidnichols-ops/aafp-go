@@ -208,7 +208,7 @@ func verifySessionID(t *testing.T, raw []byte, meta *TraceMeta) {
 
 // TestAllGoldenTraces runs all golden trace verifications.
 func TestAllGoldenTraces(t *testing.T) {
-	tracesDir := "/Users/david/AAFP-research/aafp/golden_traces"
+	tracesDir := "/Users/david/AAFP-research/implementations/rust/golden_traces"
 
 	entries, err := os.ReadDir(tracesDir)
 	if err != nil {
@@ -246,39 +246,39 @@ func TestAllGoldenTraces(t *testing.T) {
 // Individual trace tests for explicit naming
 
 func TestTrace01_SuccessfulHandshake(t *testing.T) {
-	runTrace(t, "/Users/david/AAFP-research/aafp/golden_traces/01_successful_handshake")
+	runTrace(t, "/Users/david/AAFP-research/implementations/rust/golden_traces/01_successful_handshake")
 }
 
 func TestTrace02_UnknownCriticalExtension(t *testing.T) {
-	runTrace(t, "/Users/david/AAFP-research/aafp/golden_traces/02_unknown_critical_extension")
+	runTrace(t, "/Users/david/AAFP-research/implementations/rust/golden_traces/02_unknown_critical_extension")
 }
 
 func TestTrace03_UnknownNonCriticalExtension(t *testing.T) {
-	runTrace(t, "/Users/david/AAFP-research/aafp/golden_traces/03_unknown_noncritical_extension")
+	runTrace(t, "/Users/david/AAFP-research/implementations/rust/golden_traces/03_unknown_noncritical_extension")
 }
 
 func TestTrace04_VersionMismatch(t *testing.T) {
-	runTrace(t, "/Users/david/AAFP-research/aafp/golden_traces/04_version_mismatch")
+	runTrace(t, "/Users/david/AAFP-research/implementations/rust/golden_traces/04_version_mismatch")
 }
 
 func TestTrace05_InvalidSignature(t *testing.T) {
-	runTrace(t, "/Users/david/AAFP-research/aafp/golden_traces/05_invalid_signature")
+	runTrace(t, "/Users/david/AAFP-research/implementations/rust/golden_traces/05_invalid_signature")
 }
 
 func TestTrace06_OversizedFrame(t *testing.T) {
-	runTrace(t, "/Users/david/AAFP-research/aafp/golden_traces/06_oversized_frame")
+	runTrace(t, "/Users/david/AAFP-research/implementations/rust/golden_traces/06_oversized_frame")
 }
 
 func TestTrace07_RpcRequestResponse(t *testing.T) {
-	runTrace(t, "/Users/david/AAFP-research/aafp/golden_traces/07_rpc_request_response")
+	runTrace(t, "/Users/david/AAFP-research/implementations/rust/golden_traces/07_rpc_request_response")
 }
 
 func TestTrace08_ErrorExchange(t *testing.T) {
-	runTrace(t, "/Users/david/AAFP-research/aafp/golden_traces/08_error_exchange")
+	runTrace(t, "/Users/david/AAFP-research/implementations/rust/golden_traces/08_error_exchange")
 }
 
 func TestTrace09_DiscoveryAnnounce(t *testing.T) {
-	runTrace(t, "/Users/david/AAFP-research/aafp/golden_traces/09_discovery_announce")
+	runTrace(t, "/Users/david/AAFP-research/implementations/rust/golden_traces/09_discovery_announce")
 }
 
 func runTrace(t *testing.T, dir string) {
