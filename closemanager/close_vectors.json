@@ -1,0 +1,254 @@
+{
+  "description": "Differential test vectors for CloseManager (RFC-0002 §6.6, A-8)",
+  "vectors": [
+    {
+      "name": "graceful_close_client_initiated",
+      "description": "Client initiates close, server responds",
+      "events": [
+        {"type": "initiate_close", "code": 0, "message": "goodbye"},
+        {"type": "on_close_received", "code": 0, "message": "ack"}
+      ],
+      "expected_final_state": "Closed",
+      "expected_actions": [
+        {"kind": "send_close_frame", "code": 0, "message": "goodbye"},
+        {"kind": "close_quic"}
+      ]
+    },
+    {
+      "name": "graceful_close_server_initiated",
+      "description": "Server sends CLOSE, client responds",
+      "events": [
+        {"type": "on_close_received", "code": 0, "message": "server bye"},
+        {"type": "respond_close", "code": 0, "message": "client ack"}
+      ],
+      "expected_final_state": "Closed",
+      "expected_actions": [
+        {"kind": "none"},
+        {"kind": "send_close_frame", "code": 0, "message": "client ack"}
+      ]
+    },
+    {
+      "name": "crossed_close",
+      "description": "Both sides send CLOSE simultaneously",
+      "events": [
+        {"type": "initiate_close", "code": 0, "message": "local"},
+        {"type": "on_close_received", "code": 0, "message": "peer"}
+      ],
+      "expected_final_state": "Closed",
+      "expected_actions": [
+        {"kind": "send_close_frame", "code": 0, "message": "local"},
+        {"kind": "close_quic"}
+      ]
+    },
+    {
+      "name": "timeout_close",
+      "description": "Close initiated, peer never responds, timeout fires",
+      "events": [
+        {"type": "initiate_close", "code": 0, "message": "bye"},
+        {"type": "on_timeout"}
+      ],
+      "expected_final_state": "Closed",
+      "expected_actions": [
+        {"kind": "send_close_frame", "code": 0, "message": "bye"},
+        {"kind": "close_quic"}
+      ]
+    },
+    {
+      "name": "abort_close",
+      "description": "Abort without sending CLOSE",
+      "events": [
+        {"type": "abort"}
+      ],
+      "expected_final_state": "Closed",
+      "expected_actions": [
+        {"kind": "close_quic"}
+      ]
+    },
+    {
+      "name": "fatal_error_close",
+      "description": "Fatal ERROR received, immediate close",
+      "events": [
+        {"type": "on_fatal_error"}
+      ],
+      "expected_final_state": "Closed",
+      "expected_actions": [
+        {"kind": "close_quic"}
+      ]
+    },
+    {
+      "name": "transport_reset_close",
+      "description": "Transport reset, immediate close",
+      "events": [
+        {"type": "on_transport_reset"}
+      ],
+      "expected_final_state": "Closed",
+      "expected_actions": [
+        {"kind": "close_quic"}
+      ]
+    },
+    {
+      "name": "duplicate_close_ignored",
+      "description": "Multiple CLOSE frames received, only first processed",
+      "events": [
+        {"type": "on_close_received", "code": 0, "message": "first"},
+        {"type": "on_close_received", "code": 1, "message": "second"},
+        {"type": "on_close_received", "code": 2, "message": "third"},
+        {"type": "respond_close", "code": 0, "message": "ack"}
+      ],
+      "expected_final_state": "Closed",
+      "expected_actions": [
+        {"kind": "none"},
+        {"kind": "none"},
+        {"kind": "none"},
+        {"kind": "send_close_frame", "code": 0, "message": "ack"}
+      ]
+    },
+    {
+      "name": "initiate_close_idempotent",
+      "description": "Multiple initiate_close calls, only first sends",
+      "events": [
+        {"type": "initiate_close", "code": 0, "message": "first"},
+        {"type": "initiate_close", "code": 1, "message": "second"},
+        {"type": "initiate_close", "code": 2, "message": "third"},
+        {"type": "on_close_received", "code": 0, "message": "peer"}
+      ],
+      "expected_final_state": "Closed",
+      "expected_actions": [
+        {"kind": "send_close_frame", "code": 0, "message": "first"},
+        {"kind": "none"},
+        {"kind": "none"},
+        {"kind": "close_quic"}
+      ]
+    },
+    {
+      "name": "fatal_error_after_local_close",
+      "description": "Fatal ERROR arrives while waiting for peer CLOSE",
+      "events": [
+        {"type": "initiate_close", "code": 0, "message": "bye"},
+        {"type": "on_fatal_error"}
+      ],
+      "expected_final_state": "Closed",
+      "expected_actions": [
+        {"kind": "send_close_frame", "code": 0, "message": "bye"},
+        {"kind": "close_quic"}
+      ]
+    },
+    {
+      "name": "transport_reset_after_remote_close",
+      "description": "Transport reset while waiting to respond",
+      "events": [
+        {"type": "on_close_received", "code": 0, "message": "peer"},
+        {"type": "on_transport_reset"}
+      ],
+      "expected_final_state": "Closed",
+      "expected_actions": [
+        {"kind": "none"},
+        {"kind": "close_quic"}
+      ]
+    },
+    {
+      "name": "timeout_in_remote_close_received",
+      "description": "Timeout fires before responding to peer CLOSE",
+      "events": [
+        {"type": "on_close_received", "code": 0, "message": "peer"},
+        {"type": "on_timeout"}
+      ],
+      "expected_final_state": "Closed",
+      "expected_actions": [
+        {"kind": "none"},
+        {"kind": "close_quic"}
+      ]
+    },
+    {
+      "name": "nonzero_close_code",
+      "description": "Close with non-zero code (going away)",
+      "events": [
+        {"type": "initiate_close", "code": 1000, "message": "going away"},
+        {"type": "on_close_received", "code": 0, "message": "ack"}
+      ],
+      "expected_final_state": "Closed",
+      "expected_actions": [
+        {"kind": "send_close_frame", "code": 1000, "message": "going away"},
+        {"kind": "close_quic"}
+      ]
+    },
+    {
+      "name": "oversized_message_truncated",
+      "description": "Close message over 256 bytes is truncated",
+      "events": [
+        {"type": "initiate_close", "code": 0, "message": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"}
+      ],
+      "expected_final_state": "LocalCloseSent",
+      "expected_actions": [
+        {"kind": "send_close_frame", "code": 0, "message_truncated": true}
+      ]
+    },
+    {
+      "name": "empty_message",
+      "description": "Close with empty message",
+      "events": [
+        {"type": "initiate_close", "code": 0, "message": ""},
+        {"type": "on_close_received", "code": 0, "message": "ack"}
+      ],
+      "expected_final_state": "Closed",
+      "expected_actions": [
+        {"kind": "send_close_frame", "code": 0, "message": ""},
+        {"kind": "close_quic"}
+      ]
+    },
+    {
+      "name": "late_close_after_abort",
+      "description": "CLOSE arrives after abort - should be no-op",
+      "events": [
+        {"type": "abort"},
+        {"type": "on_close_received", "code": 0, "message": "late"}
+      ],
+      "expected_final_state": "Closed",
+      "expected_actions": [
+        {"kind": "close_quic"},
+        {"kind": "none"}
+      ]
+    },
+    {
+      "name": "late_timeout_after_close",
+      "description": "Timeout fires after already closed",
+      "events": [
+        {"type": "initiate_close", "code": 0, "message": "bye"},
+        {"type": "on_close_received", "code": 0, "message": "peer"},
+        {"type": "on_timeout"}
+      ],
+      "expected_final_state": "Closed",
+      "expected_actions": [
+        {"kind": "send_close_frame", "code": 0, "message": "bye"},
+        {"kind": "close_quic"},
+        {"kind": "none"}
+      ]
+    },
+    {
+      "name": "respond_close_from_open_noop",
+      "description": "respond_close called without receiving CLOSE first",
+      "events": [
+        {"type": "respond_close", "code": 0, "message": "ack"}
+      ],
+      "expected_final_state": "Open",
+      "expected_actions": [
+        {"kind": "none"}
+      ]
+    },
+    {
+      "name": "initiate_after_remote_close_noop",
+      "description": "initiate_close after receiving peer CLOSE is no-op",
+      "events": [
+        {"type": "on_close_received", "code": 0, "message": "peer"},
+        {"type": "initiate_close", "code": 0, "message": "local"},
+        {"type": "respond_close", "code": 0, "message": "ack"}
+      ],
+      "expected_final_state": "Closed",
+      "expected_actions": [
+        {"kind": "none"},
+        {"kind": "none"},
+        {"kind": "send_close_frame", "code": 0, "message": "ack"}
+      ]
+    }
+  ]
+}

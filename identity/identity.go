@@ -109,15 +109,16 @@ func CapabilityFromCBOR(v *cbor.Value) (*CapabilityDescriptor, error) {
 
 // AgentRecord represents an AAFP AgentRecord per RFC-0003 §3.
 type AgentRecord struct {
-	RecordType   string
-	AgentId      []byte
-	PublicKey    []byte
-	Capabilities []CapabilityDescriptor
-	Endpoints    []string
-	CreatedAt    uint64
-	ExpiresAt    uint64
-	Signature    []byte
-	KeyAlgorithm uint64
+	RecordType    string
+	AgentId       []byte
+	PublicKey     []byte
+	Capabilities  []CapabilityDescriptor
+	Endpoints     []string
+	CreatedAt     uint64
+	ExpiresAt     uint64
+	Signature     []byte
+	KeyAlgorithm  uint64
+	RecordVersion uint64 // A-3 (Rev 6): monotonic replay protection
 }
 
 // ToCBORWithoutSig encodes the AgentRecord as CBOR excluding the signature
@@ -144,6 +145,8 @@ func (r *AgentRecord) ToCBORWithoutSig() cbor.Value {
 	entries = append(entries, cbor.IntMapEntry{Key: 7, Value: cbor.UUint(r.ExpiresAt)})
 	// Key 8 (signature) is excluded — this is the signature input
 	entries = append(entries, cbor.IntMapEntry{Key: 9, Value: cbor.UUint(r.KeyAlgorithm)})
+	// A-3 (Rev 6): record_version for replay protection
+	entries = append(entries, cbor.IntMapEntry{Key: 10, Value: cbor.UUint(r.RecordVersion)})
 	return cbor.IMap(entries)
 }
 
@@ -205,6 +208,11 @@ func AgentRecordFromCBOR(v *cbor.Value) (*AgentRecord, error) {
 	}
 	if val := v.IntMapGet(9); val != nil && val.Kind() == cbor.KindUnsigned {
 		r.KeyAlgorithm = val.Uint()
+	}
+	// A-3 (Rev 6): record_version (key 10) for replay protection.
+	// Defaults to 0 for backward compatibility with pre-Rev 6 records.
+	if val := v.IntMapGet(10); val != nil && val.Kind() == cbor.KindUnsigned {
+		r.RecordVersion = val.Uint()
 	}
 	return r, nil
 }

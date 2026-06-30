@@ -1,0 +1,414 @@
+{
+  "vectors": [
+    {
+      "description": "valid DATA frame no extensions",
+      "frame_hex": "010100000000000000000004000000000000000200000000000000000102",
+      "context": {
+        "signature_verified": true,
+        "agent_id_verified": true,
+        "session_valid": true,
+        "authorized": true,
+        "capabilities_sufficient": true,
+        "transcript_valid": true,
+        "known_types": [],
+        "negotiated_types": []
+      },
+      "expected_success": true,
+      "expected_phase": null,
+      "expected_error_code": null,
+      "expected_fatal": null,
+      "expected_callback_count": 0,
+      "expected_extensions_ignored": 0
+    },
+    {
+      "description": "valid DATA frame with known extension",
+      "frame_hex": "0101000000000000000000040000000000000001000000000000000a0001000000000002dead01",
+      "context": {
+        "signature_verified": true,
+        "agent_id_verified": true,
+        "session_valid": true,
+        "authorized": true,
+        "capabilities_sufficient": true,
+        "transcript_valid": true,
+        "known_types": [
+          1
+        ],
+        "negotiated_types": [
+          1
+        ]
+      },
+      "expected_success": true,
+      "expected_phase": null,
+      "expected_error_code": null,
+      "expected_fatal": null,
+      "expected_callback_count": 1,
+      "expected_extensions_ignored": 0
+    },
+    {
+      "description": "valid DATA frame with unknown non-critical extension",
+      "frame_hex": "01010000000000000000000400000000000000010000000000000009beef0000000000010101",
+      "context": {
+        "signature_verified": true,
+        "agent_id_verified": true,
+        "session_valid": true,
+        "authorized": true,
+        "capabilities_sufficient": true,
+        "transcript_valid": true,
+        "known_types": [],
+        "negotiated_types": []
+      },
+      "expected_success": true,
+      "expected_phase": null,
+      "expected_error_code": null,
+      "expected_fatal": null,
+      "expected_callback_count": 0,
+      "expected_extensions_ignored": 1
+    },
+    {
+      "description": "valid HANDSHAKE frame no extensions",
+      "frame_hex": "01020000000000000000000000000000000000010000000000000000a0",
+      "context": {
+        "signature_verified": true,
+        "agent_id_verified": true,
+        "session_valid": true,
+        "authorized": true,
+        "capabilities_sufficient": true,
+        "transcript_valid": true,
+        "known_types": [],
+        "negotiated_types": []
+      },
+      "expected_success": true,
+      "expected_phase": null,
+      "expected_error_code": null,
+      "expected_fatal": null,
+      "expected_callback_count": 0,
+      "expected_extensions_ignored": 0
+    },
+    {
+      "description": "invalid version",
+      "frame_hex": "6301000000000000000000040000000000000001000000000000000001",
+      "context": {
+        "signature_verified": true,
+        "agent_id_verified": true,
+        "session_valid": true,
+        "authorized": true,
+        "capabilities_sufficient": true,
+        "transcript_valid": true,
+        "known_types": [],
+        "negotiated_types": []
+      },
+      "expected_success": false,
+      "expected_phase": 1,
+      "expected_error_code": 8006,
+      "expected_fatal": true,
+      "expected_callback_count": 0,
+      "expected_extensions_ignored": 0
+    },
+    {
+      "description": "reserved field nonzero",
+      "frame_hex": "010100ff00000000000000040000000000000001000000000000000001",
+      "context": {
+        "signature_verified": true,
+        "agent_id_verified": true,
+        "session_valid": true,
+        "authorized": true,
+        "capabilities_sufficient": true,
+        "transcript_valid": true,
+        "known_types": [],
+        "negotiated_types": []
+      },
+      "expected_success": false,
+      "expected_phase": 1,
+      "expected_error_code": 8008,
+      "expected_fatal": true,
+      "expected_callback_count": 0,
+      "expected_extensions_ignored": 0
+    },
+    {
+      "description": "oversized payload",
+      "frame_hex": "01010000000000000000000400000000002000000000000000000000",
+      "context": {
+        "signature_verified": true,
+        "agent_id_verified": true,
+        "session_valid": true,
+        "authorized": true,
+        "capabilities_sufficient": true,
+        "transcript_valid": true,
+        "known_types": [],
+        "negotiated_types": []
+      },
+      "expected_success": false,
+      "expected_phase": 2,
+      "expected_error_code": 8001,
+      "expected_fatal": false,
+      "expected_callback_count": 0,
+      "expected_extensions_ignored": 0
+    },
+    {
+      "description": "oversized extension",
+      "frame_hex": "0101000000000000000000040000000000000064000000000001117000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "context": {
+        "signature_verified": true,
+        "agent_id_verified": true,
+        "session_valid": true,
+        "authorized": true,
+        "capabilities_sufficient": true,
+        "transcript_valid": true,
+        "known_types": [],
+        "negotiated_types": []
+      },
+      "expected_success": false,
+      "expected_phase": 2,
+      "expected_error_code": 8001,
+      "expected_fatal": false,
+      "expected_callback_count": 0,
+      "expected_extensions_ignored": 0
+    },
+    {
+      "description": "non-canonical CBOR",
+      "frame_hex": "010200000000000000000000000000000000000200000000000000001805",
+      "context": {
+        "signature_verified": true,
+        "agent_id_verified": true,
+        "session_valid": true,
+        "authorized": true,
+        "capabilities_sufficient": true,
+        "transcript_valid": true,
+        "known_types": [],
+        "negotiated_types": []
+      },
+      "expected_success": false,
+      "expected_phase": 6,
+      "expected_error_code": 5003,
+      "expected_fatal": true,
+      "expected_callback_count": 0,
+      "expected_extensions_ignored": 0
+    },
+    {
+      "description": "duplicate CBOR keys",
+      "frame_hex": "01020000000000000000000000000000000000070000000000000000a2016161016162",
+      "context": {
+        "signature_verified": true,
+        "agent_id_verified": true,
+        "session_valid": true,
+        "authorized": true,
+        "capabilities_sufficient": true,
+        "transcript_valid": true,
+        "known_types": [],
+        "negotiated_types": []
+      },
+      "expected_success": false,
+      "expected_phase": 6,
+      "expected_error_code": 5003,
+      "expected_fatal": true,
+      "expected_callback_count": 0,
+      "expected_extensions_ignored": 0
+    },
+    {
+      "description": "transcript state invalid",
+      "frame_hex": "01020000000000000000000000000000000000010000000000000000a0",
+      "context": {
+        "signature_verified": true,
+        "agent_id_verified": true,
+        "session_valid": true,
+        "authorized": true,
+        "capabilities_sufficient": true,
+        "transcript_valid": false,
+        "known_types": [],
+        "negotiated_types": []
+      },
+      "expected_success": false,
+      "expected_phase": 9,
+      "expected_error_code": 2006,
+      "expected_fatal": true,
+      "expected_callback_count": 0,
+      "expected_extensions_ignored": 0
+    },
+    {
+      "description": "invalid signature",
+      "frame_hex": "0101000000000000000000040000000000000001000000000000000001",
+      "context": {
+        "signature_verified": false,
+        "agent_id_verified": true,
+        "session_valid": true,
+        "authorized": true,
+        "capabilities_sufficient": true,
+        "transcript_valid": true,
+        "known_types": [],
+        "negotiated_types": []
+      },
+      "expected_success": false,
+      "expected_phase": 10,
+      "expected_error_code": 2001,
+      "expected_fatal": true,
+      "expected_callback_count": 0,
+      "expected_extensions_ignored": 0
+    },
+    {
+      "description": "invalid agent id",
+      "frame_hex": "0101000000000000000000040000000000000001000000000000000001",
+      "context": {
+        "signature_verified": true,
+        "agent_id_verified": false,
+        "session_valid": true,
+        "authorized": true,
+        "capabilities_sufficient": true,
+        "transcript_valid": true,
+        "known_types": [],
+        "negotiated_types": []
+      },
+      "expected_success": false,
+      "expected_phase": 11,
+      "expected_error_code": 2007,
+      "expected_fatal": true,
+      "expected_callback_count": 0,
+      "expected_extensions_ignored": 0
+    },
+    {
+      "description": "invalid session state",
+      "frame_hex": "0101000000000000000000040000000000000001000000000000000001",
+      "context": {
+        "signature_verified": true,
+        "agent_id_verified": true,
+        "session_valid": false,
+        "authorized": true,
+        "capabilities_sufficient": true,
+        "transcript_valid": true,
+        "known_types": [],
+        "negotiated_types": []
+      },
+      "expected_success": false,
+      "expected_phase": 12,
+      "expected_error_code": 8009,
+      "expected_fatal": true,
+      "expected_callback_count": 0,
+      "expected_extensions_ignored": 0
+    },
+    {
+      "description": "unauthorized",
+      "frame_hex": "0101000000000000000000040000000000000001000000000000000001",
+      "context": {
+        "signature_verified": true,
+        "agent_id_verified": true,
+        "session_valid": true,
+        "authorized": false,
+        "capabilities_sufficient": true,
+        "transcript_valid": true,
+        "known_types": [],
+        "negotiated_types": []
+      },
+      "expected_success": false,
+      "expected_phase": 13,
+      "expected_error_code": 3001,
+      "expected_fatal": true,
+      "expected_callback_count": 0,
+      "expected_extensions_ignored": 0
+    },
+    {
+      "description": "insufficient capability",
+      "frame_hex": "0101000000000000000000040000000000000001000000000000000001",
+      "context": {
+        "signature_verified": true,
+        "agent_id_verified": true,
+        "session_valid": true,
+        "authorized": true,
+        "capabilities_sufficient": false,
+        "transcript_valid": true,
+        "known_types": [],
+        "negotiated_types": []
+      },
+      "expected_success": false,
+      "expected_phase": 14,
+      "expected_error_code": 3002,
+      "expected_fatal": true,
+      "expected_callback_count": 0,
+      "expected_extensions_ignored": 0
+    },
+    {
+      "description": "handshake with extensions",
+      "frame_hex": "01020000000000000000000000000000000000010000000000000009000100000000000101a0",
+      "context": {
+        "signature_verified": true,
+        "agent_id_verified": true,
+        "session_valid": true,
+        "authorized": true,
+        "capabilities_sufficient": true,
+        "transcript_valid": true,
+        "known_types": [],
+        "negotiated_types": []
+      },
+      "expected_success": false,
+      "expected_phase": 15,
+      "expected_error_code": 8009,
+      "expected_fatal": true,
+      "expected_callback_count": 0,
+      "expected_extensions_ignored": 0
+    },
+    {
+      "description": "unknown critical extension",
+      "frame_hex": "0101000000000000000000040000000000000001000000000000000abeef010000000002010201",
+      "context": {
+        "signature_verified": true,
+        "agent_id_verified": true,
+        "session_valid": true,
+        "authorized": true,
+        "capabilities_sufficient": true,
+        "transcript_valid": true,
+        "known_types": [],
+        "negotiated_types": []
+      },
+      "expected_success": false,
+      "expected_phase": 16,
+      "expected_error_code": 8005,
+      "expected_fatal": true,
+      "expected_callback_count": 0,
+      "expected_extensions_ignored": 0
+    },
+    {
+      "description": "known but not negotiated extension",
+      "frame_hex": "0101000000000000000000040000000000000001000000000000000900010000000000010101",
+      "context": {
+        "signature_verified": true,
+        "agent_id_verified": true,
+        "session_valid": true,
+        "authorized": true,
+        "capabilities_sufficient": true,
+        "transcript_valid": true,
+        "known_types": [
+          1
+        ],
+        "negotiated_types": []
+      },
+      "expected_success": false,
+      "expected_phase": 17,
+      "expected_error_code": 8007,
+      "expected_fatal": true,
+      "expected_callback_count": 0,
+      "expected_extensions_ignored": 0
+    },
+    {
+      "description": "mixed known and unknown extensions",
+      "frame_hex": "01010000000000000000000400000000000000010000000000000012000100000000000101beef0000000000010201",
+      "context": {
+        "signature_verified": true,
+        "agent_id_verified": true,
+        "session_valid": true,
+        "authorized": true,
+        "capabilities_sufficient": true,
+        "transcript_valid": true,
+        "known_types": [
+          1
+        ],
+        "negotiated_types": [
+          1
+        ]
+      },
+      "expected_success": true,
+      "expected_phase": null,
+      "expected_error_code": null,
+      "expected_fatal": null,
+      "expected_callback_count": 1,
+      "expected_extensions_ignored": 1
+    }
+  ]
+}

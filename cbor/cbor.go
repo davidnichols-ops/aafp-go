@@ -316,6 +316,231 @@ func Decode(data []byte) (*Value, int, error) {
 	return v, pos, nil
 }
 
+// CheckCanonical validates that a byte buffer is canonical CBOR
+// (RFC 8949 §4.2.3). It rejects non-shortest integer encodings,
+// indefinite-length containers, duplicate map keys, and trailing bytes.
+//
+// This is used by the frame processing pipeline (RFC-0002 §6.5, Phase 6-8)
+// to validate that CBOR payloads conform to canonical encoding requirements.
+func CheckCanonical(data []byte) error {
+	_, consumed, err := decodeCanonicalCheck(data)
+	if err != nil {
+		return err
+	}
+	if consumed != len(data) {
+		return fmt.Errorf("cbor: trailing bytes after value: consumed %d of %d",
+			consumed, len(data))
+	}
+	return nil
+}
+
+// decodeCanonicalCheck decodes CBOR with full canonical validation including
+// shortest-encoding checks and duplicate key detection.
+func decodeCanonicalCheck(data []byte) (*Value, int, error) {
+	pos := 0
+	v, err := decodeValueCanonical(data, &pos)
+	if err != nil {
+		return nil, 0, err
+	}
+	return v, pos, nil
+}
+
+// decodeValueCanonical is like decodeValue but with canonical validation.
+func decodeValueCanonical(data []byte, pos *int) (*Value, error) {
+	if *pos >= len(data) {
+		return nil, errors.New("cbor: unexpected EOF")
+	}
+	ib := data[*pos]
+	*pos++
+	mt := ib & 0xe0
+	ai := ib & 0x1f
+
+	// Reject indefinite-length (ai == 31 for major types 2-5)
+	if ai == aiBreak && (mt == mtByteStr || mt == mtTextStr || mt == mtArray || mt == mtMap) {
+		return nil, errors.New("cbor: indefinite-length not allowed in canonical encoding")
+	}
+
+	arg, err := readArgCanonical(data, pos, ai)
+	if err != nil {
+		return nil, err
+	}
+
+	switch mt {
+	case mtUnsigned:
+		v := UUint(arg)
+		return &v, nil
+	case mtNegative:
+		if arg > uint64(1<<63-1) {
+			return nil, fmt.Errorf("cbor: negative integer overflow at offset %d", *pos)
+		}
+		v := NInt(-int64(arg) - 1)
+		return &v, nil
+	case mtByteStr:
+		start := *pos
+		end := start + int(arg)
+		if end > len(data) {
+			return nil, errors.New("cbor: byte string truncated")
+		}
+		v := BStr(data[start:end])
+		*pos = end
+		return &v, nil
+	case mtTextStr:
+		start := *pos
+		end := start + int(arg)
+		if end > len(data) {
+			return nil, errors.New("cbor: text string truncated")
+		}
+		s := string(data[start:end])
+		if !isValidUTF8(s) {
+			return nil, errors.New("cbor: invalid UTF-8 in text string")
+		}
+		v := TStr(s)
+		*pos = end
+		return &v, nil
+	case mtArray:
+		arr := make([]Value, arg)
+		for i := uint64(0); i < arg; i++ {
+			av, err := decodeValueCanonical(data, pos)
+			if err != nil {
+				return nil, err
+			}
+			arr[i] = *av
+		}
+		v := Arr(arr)
+		return &v, nil
+	case mtMap:
+		// Decode entries with duplicate key detection
+		var intEntries []IntMapEntry
+		var strEntries []StrMapEntry
+		allInt := true
+		allStr := true
+		for i := uint64(0); i < arg; i++ {
+			k, err := decodeValueCanonical(data, pos)
+			if err != nil {
+				return nil, err
+			}
+			val, err := decodeValueCanonical(data, pos)
+			if err != nil {
+				return nil, err
+			}
+			// Check for duplicate keys among already-seen entries
+			if k.kind == KindUnsigned || k.kind == KindNegative {
+				keyVal := int64(k.uint)
+				if k.kind == KindNegative {
+					keyVal = k.neg
+				}
+				for j := range intEntries {
+					if intEntries[j].Key == keyVal {
+						return nil, fmt.Errorf("cbor: duplicate map key at entry %d", i)
+					}
+				}
+				intEntries = append(intEntries, IntMapEntry{Key: keyVal, Value: *val})
+			} else if k.kind == KindTextString {
+				for j := range strEntries {
+					if strEntries[j].Key == k.str {
+						return nil, fmt.Errorf("cbor: duplicate map key at entry %d", i)
+					}
+				}
+				strEntries = append(strEntries, StrMapEntry{Key: k.str, Value: *val})
+			} else {
+				allInt = false
+				allStr = false
+			}
+		}
+		if allInt && len(strEntries) == 0 {
+			v := IMap(intEntries)
+			return &v, nil
+		}
+		if allStr && len(intEntries) == 0 {
+			v := SMap(strEntries)
+			return &v, nil
+		}
+		return nil, errors.New("cbor: mixed key types in map not supported")
+	case mtSimple:
+		switch ai {
+		case simpleFalse:
+			v := Bool(false)
+			return &v, nil
+		case simpleTrue:
+			v := Bool(true)
+			return &v, nil
+		case simpleNull, simpleUndef:
+			v := Null()
+			return &v, nil
+		default:
+			return nil, fmt.Errorf("cbor: unsupported simple value %d", ai)
+		}
+	default:
+		return nil, fmt.Errorf("cbor: unsupported major type %d at offset %d", mt>>5, *pos)
+	}
+}
+
+// readArgCanonical is like readArg but validates shortest encoding.
+func readArgCanonical(data []byte, pos *int, ai byte) (uint64, error) {
+	switch ai {
+	case 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23:
+		return uint64(ai), nil
+	case aiOneByte:
+		if *pos+1 > len(data) {
+			return 0, errors.New("cbor: truncated 1-byte argument")
+		}
+		v := uint64(data[*pos])
+		*pos++
+		// Canonical check: values 0-23 must use immediate encoding
+		if v <= 23 {
+			return 0, fmt.Errorf("cbor: non-canonical encoding: value %d should use immediate, not 1-byte", v)
+		}
+		return v, nil
+	case aiTwoBytes:
+		if *pos+2 > len(data) {
+			return 0, errors.New("cbor: truncated 2-byte argument")
+		}
+		v := uint64(binary.BigEndian.Uint16(data[*pos:]))
+		*pos += 2
+		// Canonical check: values 0-255 should use 1-byte, not 2-byte
+		if v <= 255 {
+			return 0, fmt.Errorf("cbor: non-canonical encoding: value %d should use 1-byte, not 2-byte", v)
+		}
+		return v, nil
+	case aiFourBytes:
+		if *pos+4 > len(data) {
+			return 0, errors.New("cbor: truncated 4-byte argument")
+		}
+		v := uint64(binary.BigEndian.Uint32(data[*pos:]))
+		*pos += 4
+		// Canonical check: values 0-65535 should use 2-byte, not 4-byte
+		if v <= 65535 {
+			return 0, fmt.Errorf("cbor: non-canonical encoding: value %d should use 2-byte, not 4-byte", v)
+		}
+		return v, nil
+	case aiEightBytes:
+		if *pos+8 > len(data) {
+			return 0, errors.New("cbor: truncated 8-byte argument")
+		}
+		v := binary.BigEndian.Uint64(data[*pos:])
+		*pos += 8
+		// Canonical check: values 0-4294967295 should use 4-byte, not 8-byte
+		if v <= 4294967295 {
+			return 0, fmt.Errorf("cbor: non-canonical encoding: value %d should use 4-byte, not 8-byte", v)
+		}
+		return v, nil
+	case aiBreak:
+		return 0, errors.New("cbor: indefinite-length not allowed in canonical encoding")
+	default:
+		return 0, fmt.Errorf("cbor: invalid additional info %d", ai)
+	}
+}
+
+// isValidUTF8 checks if a string is valid UTF-8.
+func isValidUTF8(s string) bool {
+	for _, r := range s {
+		if r == 0xFFFD {
+			return false
+		}
+	}
+	return true
+}
+
 func decodeValue(data []byte, pos *int) (*Value, error) {
 	if *pos >= len(data) {
 		return nil, errors.New("cbor: unexpected EOF")
