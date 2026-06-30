@@ -206,9 +206,31 @@ func verifySessionID(t *testing.T, raw []byte, meta *TraceMeta) {
 	}
 }
 
+// tracesDir returns the golden traces directory, checking the
+// AAFP_GOLDEN_TRACES environment variable first, then falling back
+// to a relative path from the Go implementation directory.
+func tracesDir() string {
+	if dir := os.Getenv("AAFP_GOLDEN_TRACES"); dir != "" {
+		return dir
+	}
+	// Try relative path from this test file's package directory.
+	// The Go impl is at implementations/go, Rust at implementations/rust.
+	rel := filepath.Join("..", "..", "rust", "golden_traces")
+	if abs, err := filepath.Abs(rel); err == nil {
+		if _, err := os.Stat(abs); err == nil {
+			return abs
+		}
+	}
+	// Golden traces not found — skip the test.
+	return ""
+}
+
 // TestAllGoldenTraces runs all golden trace verifications.
 func TestAllGoldenTraces(t *testing.T) {
-	tracesDir := "/Users/david/AAFP-research/implementations/rust/golden_traces"
+	tracesDir := tracesDir()
+	if tracesDir == "" {
+		t.Skip("golden traces directory not found (set AAFP_GOLDEN_TRACES env var or run from repo root)")
+	}
 
 	entries, err := os.ReadDir(tracesDir)
 	if err != nil {
@@ -246,39 +268,71 @@ func TestAllGoldenTraces(t *testing.T) {
 // Individual trace tests for explicit naming
 
 func TestTrace01_SuccessfulHandshake(t *testing.T) {
-	runTrace(t, "/Users/david/AAFP-research/implementations/rust/golden_traces/01_successful_handshake")
+	runTrace(t, filepath.Join(tracesDir(), "01_successful_handshake"))
 }
 
 func TestTrace02_UnknownCriticalExtension(t *testing.T) {
-	runTrace(t, "/Users/david/AAFP-research/implementations/rust/golden_traces/02_unknown_critical_extension")
+	runTrace(t, filepath.Join(tracesDir(), "02_unknown_critical_extension"))
 }
 
 func TestTrace03_UnknownNonCriticalExtension(t *testing.T) {
-	runTrace(t, "/Users/david/AAFP-research/implementations/rust/golden_traces/03_unknown_noncritical_extension")
+	runTrace(t, filepath.Join(tracesDir(), "03_unknown_noncritical_extension"))
 }
 
 func TestTrace04_VersionMismatch(t *testing.T) {
-	runTrace(t, "/Users/david/AAFP-research/implementations/rust/golden_traces/04_version_mismatch")
+	runTrace(t, filepath.Join(tracesDir(), "04_version_mismatch"))
 }
 
 func TestTrace05_InvalidSignature(t *testing.T) {
-	runTrace(t, "/Users/david/AAFP-research/implementations/rust/golden_traces/05_invalid_signature")
+	runTrace(t, filepath.Join(tracesDir(), "05_invalid_signature"))
 }
 
 func TestTrace06_OversizedFrame(t *testing.T) {
-	runTrace(t, "/Users/david/AAFP-research/implementations/rust/golden_traces/06_oversized_frame")
+	runTrace(t, filepath.Join(tracesDir(), "06_oversized_frame"))
 }
 
 func TestTrace07_RpcRequestResponse(t *testing.T) {
-	runTrace(t, "/Users/david/AAFP-research/implementations/rust/golden_traces/07_rpc_request_response")
+	runTrace(t, filepath.Join(tracesDir(), "07_rpc_request_response"))
 }
 
 func TestTrace08_ErrorExchange(t *testing.T) {
-	runTrace(t, "/Users/david/AAFP-research/implementations/rust/golden_traces/08_error_exchange")
+	runTrace(t, filepath.Join(tracesDir(), "08_error_exchange"))
 }
 
 func TestTrace09_DiscoveryAnnounce(t *testing.T) {
-	runTrace(t, "/Users/david/AAFP-research/implementations/rust/golden_traces/09_discovery_announce")
+	runTrace(t, filepath.Join(tracesDir(), "09_discovery_announce"))
+}
+
+func TestTrace10_PingPong(t *testing.T) {
+	runTrace(t, filepath.Join(tracesDir(), "10_ping_pong"))
+}
+
+func TestTrace11_GracefulClose(t *testing.T) {
+	runTrace(t, filepath.Join(tracesDir(), "11_graceful_close"))
+}
+
+func TestTrace12_FatalError(t *testing.T) {
+	runTrace(t, filepath.Join(tracesDir(), "12_fatal_error"))
+}
+
+func TestTrace13_NonFatalError(t *testing.T) {
+	runTrace(t, filepath.Join(tracesDir(), "13_nonfatal_error"))
+}
+
+func TestTrace14_CapabilityExchange(t *testing.T) {
+	runTrace(t, filepath.Join(tracesDir(), "14_capability_exchange"))
+}
+
+func TestTrace15_DataWithExtension(t *testing.T) {
+	runTrace(t, filepath.Join(tracesDir(), "15_data_with_extension"))
+}
+
+func TestTrace16_FullHandshakeWithTranscripts(t *testing.T) {
+	runTrace(t, filepath.Join(tracesDir(), "16_full_handshake_with_transcripts"))
+}
+
+func TestTrace17_FragmentedData(t *testing.T) {
+	runTrace(t, filepath.Join(tracesDir(), "17_fragmented_data"))
 }
 
 func runTrace(t *testing.T, dir string) {
