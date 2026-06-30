@@ -26,9 +26,9 @@ const (
 
 // ExtensionEntry represents a handshake extension per RFC-0002 §6.4.
 type ExtensionEntry struct {
-	Type      uint64
-	Data      []byte
-	Critical  bool
+	Type     uint64
+	Data     []byte
+	Critical bool
 }
 
 func (e *ExtensionEntry) ToCBOR() cbor.Value {
@@ -93,6 +93,9 @@ func (ch *ClientHello) ToCBORWithoutSigAndMac() cbor.Value {
 }
 
 // ToCBOR encodes the full ClientHello including signature and receiver_mac.
+//
+// Per A-2 (Rev 6): optional fields MUST be omitted when absent, NOT
+// encoded as null. This ensures deterministic signature bytes.
 func (ch *ClientHello) ToCBOR() cbor.Value {
 	entries := []cbor.IntMapEntry{
 		{Key: 1, Value: cbor.UUint(ch.ProtocolVersion)},
@@ -108,10 +111,9 @@ func (ch *ClientHello) ToCBOR() cbor.Value {
 	entries = append(entries, cbor.IntMapEntry{Key: 6, Value: cbor.Arr(extArr)})
 	entries = append(entries, cbor.IntMapEntry{Key: 7, Value: cbor.BStr(ch.Signature)})
 	entries = append(entries, cbor.IntMapEntry{Key: 8, Value: cbor.UUint(ch.ExpiresAt)})
+	// A-2: Omit receiver_mac when absent (NOT null)
 	if ch.ReceiverMac != nil {
 		entries = append(entries, cbor.IntMapEntry{Key: 9, Value: cbor.BStr(ch.ReceiverMac)})
-	} else {
-		entries = append(entries, cbor.IntMapEntry{Key: 9, Value: cbor.Null()})
 	}
 	entries = append(entries, cbor.IntMapEntry{Key: 10, Value: cbor.UUint(ch.KeyAlgorithm)})
 	return cbor.IMap(entries)
@@ -153,8 +155,15 @@ func ClientHelloFromCBOR(v *cbor.Value) (*ClientHello, error) {
 	if val := v.IntMapGet(8); val != nil && val.Kind() == cbor.KindUnsigned {
 		ch.ExpiresAt = val.Uint()
 	}
-	if val := v.IntMapGet(9); val != nil && val.Kind() == cbor.KindByteString {
-		ch.ReceiverMac = val.Bytes()
+	// A-2 (Rev 6): receiver_mac MUST be omitted when absent, NOT encoded as null.
+	if val := v.IntMapGet(9); val != nil {
+		if val.Kind() == cbor.KindByteString {
+			ch.ReceiverMac = val.Bytes()
+		} else if val.Kind() == cbor.KindNull {
+			return nil, errors.New("ClientHello: receiver_mac must be omitted when absent, not null (A-2)")
+		} else {
+			return nil, fmt.Errorf("ClientHello: receiver_mac expected bstr, got %v", val.Kind())
+		}
 	}
 	if val := v.IntMapGet(10); val != nil && val.Kind() == cbor.KindUnsigned {
 		ch.KeyAlgorithm = val.Uint()
@@ -258,12 +267,19 @@ func SignatureInput(h []byte) []byte {
 	return append([]byte(domainSeparator), h...)
 }
 
-// ComputeSessionId derives the session ID per RFC-0002 §5.7:
-//   prk = HKDF-Extract(salt = client_nonce || server_nonce, IKM = h_after_clienthello)
-//   session_id = HKDF-Expand(prk, info = "aafp-session-id-v1", L = 32)
-func ComputeSessionId(hAfterClientHello, clientNonce, serverNonce []byte) []byte {
+// ComputeSessionId derives the session ID per RFC-0002 §5.7 (Rev 6 A-4):
+//
+//	ikm = h_after_clienthello || server_agent_id
+//	prk = HKDF-Extract(salt = client_nonce || server_nonce, IKM = ikm)
+//	session_id = HKDF-Expand(prk, info = "aafp-session-id-v1", L = 32)
+//
+// Per A-4 (Rev 6): the session ID is bound to the server's AgentId to
+// prevent session fixation.
+func ComputeSessionId(hAfterClientHello, clientNonce, serverNonce, serverAgentId []byte) []byte {
 	salt := append(clientNonce, serverNonce...)
-	prk := hkdfExtract(salt, hAfterClientHello)
+	// A-4: Bind session ID to server identity
+	ikm := append(hAfterClientHello, serverAgentId...)
+	prk := hkdfExtract(salt, ikm)
 	return hkdfExpand(prk, []byte(sessionInfoStr), 32)
 }
 
@@ -295,8 +311,9 @@ func hkdfExpand(prk, info []byte, length int) []byte {
 }
 
 // ComputeReceiverMac computes the DoS mitigation MAC per RFC-0002 §5.8.
-//   mac_key = HKDF(input = receiver_agent_id, info = "aafp-v1-dos-mac-key", L = 32)
-//   receiver_mac = HMAC-SHA256(key = mac_key, data = CH_CBOR_without_sig_and_mac)
+//
+//	mac_key = HKDF(input = receiver_agent_id, info = "aafp-v1-dos-mac-key", L = 32)
+//	receiver_mac = HMAC-SHA256(key = mac_key, data = CH_CBOR_without_sig_and_mac)
 func ComputeReceiverMac(receiverAgentId, chCbor []byte) []byte {
 	macKey := hkdfExpand(
 		hkdfExtract(nil, receiverAgentId),

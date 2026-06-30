@@ -24,6 +24,7 @@ const (
 	Version          = 1
 	HeaderSize       = 28
 	MaxPayloadSize   = 1 << 20 // 1 MiB
+	MaxExtensionSize = 64 * 1024 // 64 KiB (RFC-0002 §6.1, A-5)
 )
 
 // Frame types (RFC-0002 §4)
@@ -61,6 +62,10 @@ func Encode(f *Frame) ([]byte, error) {
 		return nil, fmt.Errorf("frame: payload too large (%d > %d)",
 			len(f.Payload), MaxPayloadSize)
 	}
+	if len(f.Extensions) > MaxExtensionSize {
+		return nil, fmt.Errorf("frame: extension section too large (%d > %d)",
+			len(f.Extensions), MaxExtensionSize)
+	}
 	totalBody := len(f.Extensions) + len(f.Payload)
 	buf := make([]byte, HeaderSize+totalBody)
 	buf[0] = f.Version
@@ -93,6 +98,11 @@ func Decode(data []byte) (*Frame, int, error) {
 
 	if payloadLen > MaxPayloadSize {
 		return nil, 0, fmt.Errorf("frame: payload too large (%d > %d)", payloadLen, MaxPayloadSize)
+	}
+
+	// Reject oversized extensions BEFORE any allocation (A-5)
+	if extLen > MaxExtensionSize {
+		return nil, 0, fmt.Errorf("frame: extension section too large (%d > %d)", extLen, MaxExtensionSize)
 	}
 
 	// Checked addition to prevent overflow

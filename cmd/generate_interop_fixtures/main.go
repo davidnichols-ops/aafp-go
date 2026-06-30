@@ -284,7 +284,7 @@ func main() {
 	th.Update(cfCbor)
 	writeFixture(transcriptDir, "hash_after_clientfinished.bin", th.Current())
 
-	goSessionId := handshake.ComputeSessionId(hAfterCh, nonceA, nonceB)
+	goSessionId := handshake.ComputeSessionId(hAfterCh, nonceA, nonceB, agentIdB)
 	writeFixture(transcriptDir, "session_id.bin", goSessionId)
 
 	// === Manifest ===

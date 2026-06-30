@@ -432,7 +432,7 @@ func TestAgentRecordWithoutSig(t *testing.T) {
 	cborVal := r.ToCBORWithoutSig()
 	b := mustEncodeBytes(t, cborVal)
 	gotHash := hexHash(b)
-	wantHash := "639ab6c96a0f687d2bfe6f09ae9b640eec5cc0cc5470919ea3aa282dea31138c"
+	wantHash := "75dba7094f64999fc9681192099a54810f73a5a52c99dd9106574469f9a5e280"
 	if gotHash != wantHash {
 		t.Errorf("AgentRecord without sig:\n  got  hash: %s\n  want hash: %s\n  got  bytes: %s",
 			gotHash, wantHash, hex.EncodeToString(b[:80]))
@@ -454,7 +454,7 @@ func TestAgentRecordEmptyCapabilities(t *testing.T) {
 	cborVal := r.ToCBORWithoutSig()
 	b := mustEncodeBytes(t, cborVal)
 	gotHash := hexHash(b)
-	wantHash := "7229631ba6cbc869da7723a78fc51024f539042a92ae0e78b1d3ab73a67dde46"
+	wantHash := "c9466f89e50207add067399faa81e9e8b7110b33c92bbc9234e916e1fe79aec2"
 	if gotHash != wantHash {
 		t.Errorf("AgentRecord empty caps:\n  got  hash: %s\n  want hash: %s",
 			gotHash, wantHash)
@@ -605,7 +605,7 @@ func TestDiscoveryAnnounceParams(t *testing.T) {
 	})
 	b := mustEncodeBytes(t, params)
 	gotHash := hexHash(b)
-	wantHash := "8fd498fc4e981dd0dad55ac28312467db677ecdef085ca10d7b8f094901e610d"
+	wantHash := "7dbdeddac0729c9734204c454b711c1a43762d02157385e53f7b0e0e0794ed40"
 	if gotHash != wantHash {
 		t.Errorf("announce params:\n  got  hash: %s\n  want hash: %s",
 			gotHash, wantHash)
@@ -748,17 +748,17 @@ func TestErrorCodesAlwaysFatal(t *testing.T) {
 func TestSessionIdDerivation(t *testing.T) {
 	// Verify the session ID derivation is deterministic
 	h := bytes32(0xaa) // placeholder transcript hash
-	sid := handshake.ComputeSessionId(h, nonceA, nonceB)
+	sid := handshake.ComputeSessionId(h, nonceA, nonceB, agentIDB)
 	if len(sid) != 32 {
 		t.Errorf("session ID length: %d, expected 32", len(sid))
 	}
 	// Same inputs must produce same output
-	sid2 := handshake.ComputeSessionId(h, nonceA, nonceB)
+	sid2 := handshake.ComputeSessionId(h, nonceA, nonceB, agentIDB)
 	if string(sid) != string(sid2) {
 		t.Error("session ID derivation is not deterministic")
 	}
 	// Different inputs must produce different output
-	sid3 := handshake.ComputeSessionId(h, nonceB, nonceA)
+	sid3 := handshake.ComputeSessionId(h, nonceB, nonceA, agentIDB)
 	if string(sid) == string(sid3) {
 		t.Error("session ID should differ when nonce order changes")
 	}

@@ -559,7 +559,15 @@ func TestInteropSessionId(t *testing.T) {
 	for i := range serverNonce {
 		serverNonce[i] = 0x04
 	}
-	goSessionId := handshake.ComputeSessionId(rustHashAfterCh, clientNonce, serverNonce)
+	// A-4: session ID is now bound to server agent_id
+	// The Rust fixture uses SHA-256(PUBLIC_KEY_B) as the server agent_id
+	// PUBLIC_KEY_B = [0x43; 1952]
+	publicKeyB := make([]byte, 1952)
+	for i := range publicKeyB {
+		publicKeyB[i] = 0x43
+	}
+	serverAgentId := identity.AgentIdFromPubkey(publicKeyB)
+	goSessionId := handshake.ComputeSessionId(rustHashAfterCh, clientNonce, serverNonce, serverAgentId)
 
 	if hex.EncodeToString(goSessionId) != hex.EncodeToString(rustSessionId) {
 		t.Errorf("session ID derivation:\n  Go:   %s\n  Rust: %s",
