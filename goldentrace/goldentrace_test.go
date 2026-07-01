@@ -19,14 +19,14 @@ import (
 
 // TraceMeta is the metadata JSON for a golden trace.
 type TraceMeta struct {
-	Name            string         `json:"name"`
-	Description     string         `json:"description"`
-	RFCReference    string         `json:"rfc_reference"`
-	TotalBytes      int            `json:"total_bytes"`
-	Outcome         string         `json:"outcome"`
-	Frames          []FrameMeta    `json:"frames"`
+	Name             string           `json:"name"`
+	Description      string           `json:"description"`
+	RFCReference     string           `json:"rfc_reference"`
+	TotalBytes       int              `json:"total_bytes"`
+	Outcome          string           `json:"outcome"`
+	Frames           []FrameMeta      `json:"frames"`
 	TranscriptHashes []TranscriptMeta `json:"transcript_hashes"`
-	SessionID       *string        `json:"session_id"`
+	SessionID        *string          `json:"session_id"`
 }
 
 type FrameMeta struct {

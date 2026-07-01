@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	RecordTypeV1   = "aafp-record-v1"
-	KeyAlgMLDSA65  = 1
+	RecordTypeV1  = "aafp-record-v1"
+	KeyAlgMLDSA65 = 1
 	// MaxRecordExpiry is the 30-day deployment mitigation threshold
 	// (RFC-0003 §8.4, clarified in Revision 5). This is a warning
 	// threshold, NOT a verification-rejection requirement. verify()
@@ -218,7 +218,8 @@ func AgentRecordFromCBOR(v *cbor.Value) (*AgentRecord, error) {
 }
 
 // SignatureInput returns the bytes to be signed/verified per RFC-0003 §3.4:
-//   sig_input = "aafp-v1-record" || canonical_CBOR(fields 1-7, 9)
+//
+//	sig_input = "aafp-v1-record" || canonical_CBOR(fields 1-7, 9)
 func (r *AgentRecord) SignatureInput() ([]byte, error) {
 	cborVal := r.ToCBORWithoutSig()
 	cborBytes, err := cbor.Encode(&cborVal)

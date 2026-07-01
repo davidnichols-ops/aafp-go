@@ -2,7 +2,8 @@
 // decoding per RFC-0002 §6.1.
 //
 // Wire format per extension:
-//   [Type:2B][Critical:1B][Reserved:1B][DataLen:4B][Data:N]
+//
+//	[Type:2B][Critical:1B][Reserved:1B][DataLen:4B][Data:N]
 //
 // This is distinct from handshake-level extensions (RFC-0002 §6.4),
 // which use CBOR ExtensionEntry maps.

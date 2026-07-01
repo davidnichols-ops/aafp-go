@@ -301,12 +301,12 @@ func TestPhase17NonNegotiatedExtension(t *testing.T) {
 
 type testCallback1 struct{}
 
-func (testCallback1) ExtensionType() uint16 { return 0x0001 }
+func (testCallback1) ExtensionType() uint16  { return 0x0001 }
 func (testCallback1) Process(_ []byte) error { return nil }
 
 type testCallback2 struct{}
 
-func (testCallback2) ExtensionType() uint16 { return 0x0002 }
+func (testCallback2) ExtensionType() uint16  { return 0x0002 }
 func (testCallback2) Process(_ []byte) error { return nil }
 
 func TestPhase18CallbackInvokedForValidExtension(t *testing.T) {

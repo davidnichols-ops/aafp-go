@@ -244,8 +244,8 @@ func TestEX0008_MalformedExtensionEncoding(t *testing.T) {
 	// EX-0008: Malformed extension — header says 10 bytes but only 4 available
 	data := []byte{
 		0x00, 0x01, // type = 1
-		0x00, // critical = false
-		0x00, // reserved
+		0x00,                   // critical = false
+		0x00,                   // reserved
 		0x00, 0x00, 0x00, 0x0A, // data_len = 10
 		0xDE, 0xAD, 0xBE, 0xEF, // only 4 bytes
 	}
