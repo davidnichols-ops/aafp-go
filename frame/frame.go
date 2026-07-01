@@ -1,17 +1,19 @@
 // Package frame implements the AAFP v1 frame format per RFC-0002 Section 3.
 //
 // Frame header layout (28 bytes, all big-endian):
-//   [0]     Version (8 bits) — MUST be 1
-//   [1]     FrameType (8 bits)
-//   [2]     Flags (8 bits)
-//   [3]     Reserved (8 bits) — MUST be 0 on send, ignored on receive
-//   [4..12] Stream ID (64 bits)
-//   [12..20] Payload Length (64 bits)
-//   [20..28] Extension Length (64 bits)
+//
+//	[0]     Version (8 bits) — MUST be 1
+//	[1]     FrameType (8 bits)
+//	[2]     Flags (8 bits)
+//	[3]     Reserved (8 bits) — MUST be 0 on send, ignored on receive
+//	[4..12] Stream ID (64 bits)
+//	[12..20] Payload Length (64 bits)
+//	[20..28] Extension Length (64 bits)
 //
 // Frame body (after header):
-//   Extensions (Extension Length bytes)
-//   Payload (Payload Length bytes)
+//
+//	Extensions (Extension Length bytes)
+//	Payload (Payload Length bytes)
 package frame
 
 import (
@@ -23,27 +25,27 @@ import (
 const (
 	Version          = 1
 	HeaderSize       = 28
-	MaxPayloadSize   = 1 << 20 // 1 MiB
+	MaxPayloadSize   = 1 << 20   // 1 MiB
 	MaxExtensionSize = 64 * 1024 // 64 KiB (RFC-0002 §6.1, A-5)
 )
 
 // Frame types (RFC-0002 §4)
 const (
-	TypeData         = 0x01
-	TypeHandshake    = 0x02
-	TypeRPCRequest   = 0x03
-	TypeRPCResponse  = 0x04
-	TypeClose        = 0x05
-	TypeError_       = 0x06
-	TypePing         = 0x07
-	TypePong         = 0x08
+	TypeData        = 0x01
+	TypeHandshake   = 0x02
+	TypeRPCRequest  = 0x03
+	TypeRPCResponse = 0x04
+	TypeClose       = 0x05
+	TypeError_      = 0x06
+	TypePing        = 0x07
+	TypePong        = 0x08
 )
 
 // Flags
 const (
-	FlagMore      = 0x01
+	FlagMore       = 0x01
 	FlagCompressed = 0x02
-	FlagCritical  = 0x80
+	FlagCritical   = 0x80
 )
 
 // Frame represents a decoded AAFP frame.
@@ -148,12 +150,12 @@ func Decode(data []byte) (*Frame, int, error) {
 
 // isValidFrameType checks whether a frame type is known.
 // Per RFC-0006 §4.2:
-// - Known frame types (0x01-0x08) are always valid.
-// - Unknown frame types with the critical bit set (0x80) MUST be rejected
-//   with error 8004 (UNKNOWN_CRITICAL_FRAME_TYPE).
-// - Unknown frame types without the critical bit MUST be skipped (the
-//   receiver continues processing). Decode returns the frame with
-//   IsUnknown=true so the caller can skip it.
+//   - Known frame types (0x01-0x08) are always valid.
+//   - Unknown frame types with the critical bit set (0x80) MUST be rejected
+//     with error 8004 (UNKNOWN_CRITICAL_FRAME_TYPE).
+//   - Unknown frame types without the critical bit MUST be skipped (the
+//     receiver continues processing). Decode returns the frame with
+//     IsUnknown=true so the caller can skip it.
 //
 // This function returns true if the frame type is known.
 // Callers must separately check the critical bit for unknown types.

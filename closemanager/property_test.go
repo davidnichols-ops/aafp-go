@@ -216,11 +216,11 @@ func TestPropTimerOnlyActiveInClosingStates(t *testing.T) {
 func TestPropOnlyFiveStatesReachable(t *testing.T) {
 	r := newRng(987)
 	validStates := map[CloseState]bool{
-		StateOpen:                 true,
-		StateLocalCloseSent:       true,
-		StateRemoteCloseReceived:  true,
-		StateCloseReceived:        true,
-		StateClosed:               true,
+		StateOpen:                true,
+		StateLocalCloseSent:      true,
+		StateRemoteCloseReceived: true,
+		StateCloseReceived:       true,
+		StateClosed:              true,
 	}
 	for i := 0; i < 100000; i++ {
 		cm := New()

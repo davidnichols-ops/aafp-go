@@ -13,12 +13,12 @@
 //   - Simple values: false, true, null (major type 7)
 //
 // Canonical encoding rules (RFC-0002 §8.1):
-//   1. Integers use shortest encoding
-//   2. Map keys sorted length-first (shorter keys before longer,
-//      within same length, bytewise lexicographic)
-//   3. No indefinite-length
-//   4. No tags (major type 6)
-//   5. No floating point (not used in AAFP v1)
+//  1. Integers use shortest encoding
+//  2. Map keys sorted length-first (shorter keys before longer,
+//     within same length, bytewise lexicographic)
+//  3. No indefinite-length
+//  4. No tags (major type 6)
+//  5. No floating point (not used in AAFP v1)
 package cbor
 
 import (
@@ -51,10 +51,10 @@ const (
 
 // Simple values
 const (
-	simpleFalse    = 20
-	simpleTrue     = 21
-	simpleNull     = 22
-	simpleUndef    = 23
+	simpleFalse = 20
+	simpleTrue  = 21
+	simpleNull  = 22
+	simpleUndef = 23
 )
 
 // Value represents a decoded CBOR value.
@@ -139,21 +139,21 @@ func Null() Value {
 
 // Accessors
 
-func (v *Value) Kind() ValueKind    { return v.kind }
-func (v *Value) Uint() uint64       { return v.uint }
-func (v *Value) Neg() int64         { return v.neg }
+func (v *Value) Kind() ValueKind { return v.kind }
+func (v *Value) Uint() uint64    { return v.uint }
+func (v *Value) Neg() int64      { return v.neg }
 func (v *Value) Int() int64 {
 	if v.kind == KindUnsigned {
 		return int64(v.uint)
 	}
 	return v.neg
 }
-func (v *Value) Bytes() []byte       { return v.bytes }
-func (v *Value) Str() string         { return v.str }
-func (v *Value) Arr() []Value        { return v.arr }
+func (v *Value) Bytes() []byte         { return v.bytes }
+func (v *Value) Str() string           { return v.str }
+func (v *Value) Arr() []Value          { return v.arr }
 func (v *Value) IntMap() []IntMapEntry { return v.intMap }
 func (v *Value) StrMap() []StrMapEntry { return v.strMap }
-func (v *Value) BoolVal() bool       { return v.bool }
+func (v *Value) BoolVal() bool         { return v.bool }
 
 // IntMapGet returns the value for a given integer key, or nil if not found.
 func (v *Value) IntMapGet(key int64) *Value {

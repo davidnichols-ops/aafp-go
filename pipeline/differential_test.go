@@ -9,26 +9,26 @@ import (
 
 // PipelineContextConfig matches the Rust struct for differential testing.
 type PipelineContextConfig struct {
-	SignatureVerified      bool   `json:"signature_verified"`
-	AgentIDVerified        bool   `json:"agent_id_verified"`
-	SessionValid           bool   `json:"session_valid"`
-	Authorized             bool   `json:"authorized"`
-	CapabilitiesSufficient bool   `json:"capabilities_sufficient"`
-	TranscriptValid        bool   `json:"transcript_valid"`
+	SignatureVerified      bool     `json:"signature_verified"`
+	AgentIDVerified        bool     `json:"agent_id_verified"`
+	SessionValid           bool     `json:"session_valid"`
+	Authorized             bool     `json:"authorized"`
+	CapabilitiesSufficient bool     `json:"capabilities_sufficient"`
+	TranscriptValid        bool     `json:"transcript_valid"`
 	KnownTypes             []uint16 `json:"known_types"`
 	NegotiatedTypes        []uint16 `json:"negotiated_types"`
 }
 
 type PipelineTestVector struct {
-	Description              string                  `json:"description"`
-	FrameHex                 string                  `json:"frame_hex"`
-	Context                  PipelineContextConfig   `json:"context"`
-	ExpectedSuccess          bool                    `json:"expected_success"`
-	ExpectedPhase            *int                    `json:"expected_phase"`
-	ExpectedErrorCode        *uint32                 `json:"expected_error_code"`
-	ExpectedFatal            *bool                   `json:"expected_fatal"`
-	ExpectedCallbackCount    int                     `json:"expected_callback_count"`
-	ExpectedExtensionsIgnored int                    `json:"expected_extensions_ignored"`
+	Description               string                `json:"description"`
+	FrameHex                  string                `json:"frame_hex"`
+	Context                   PipelineContextConfig `json:"context"`
+	ExpectedSuccess           bool                  `json:"expected_success"`
+	ExpectedPhase             *int                  `json:"expected_phase"`
+	ExpectedErrorCode         *uint32               `json:"expected_error_code"`
+	ExpectedFatal             *bool                 `json:"expected_fatal"`
+	ExpectedCallbackCount     int                   `json:"expected_callback_count"`
+	ExpectedExtensionsIgnored int                   `json:"expected_extensions_ignored"`
 }
 
 type PipelineTestVectors struct {
@@ -38,8 +38,8 @@ type PipelineTestVectors struct {
 // noopCallback is a callback that does nothing (matches Rust's NoopCallback).
 type noopCallback struct{}
 
-func (noopCallback) ExtensionType() uint16     { return 0x0001 }
-func (noopCallback) Process(_ []byte) error     { return nil }
+func (noopCallback) ExtensionType() uint16  { return 0x0001 }
+func (noopCallback) Process(_ []byte) error { return nil }
 
 func toTestingContext(cfg PipelineContextConfig) *TestingContext {
 	ctx := &TestingContext{

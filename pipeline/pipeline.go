@@ -177,14 +177,14 @@ type PipelineContext interface {
 // TestingContext is a simple context for testing that allows controlling
 // each phase's outcome.
 type TestingContext struct {
-	SigVerified             bool
-	AgentIDOk               bool
-	SessionValid            bool
-	AuthorizedOk            bool
-	CapabilitiesOk          bool
-	TranscriptValid         bool
-	NegotiatedTypes         map[uint16]bool
-	KnownTypes              map[uint16]bool
+	SigVerified     bool
+	AgentIDOk       bool
+	SessionValid    bool
+	AuthorizedOk    bool
+	CapabilitiesOk  bool
+	TranscriptValid bool
+	NegotiatedTypes map[uint16]bool
+	KnownTypes      map[uint16]bool
 }
 
 // DefaultTestingContext returns a TestingContext with all checks passing.
@@ -208,7 +208,7 @@ func (c *TestingContext) Authorized(_ byte) bool        { return c.AuthorizedOk 
 func (c *TestingContext) CapabilitiesSufficient(_ byte) bool {
 	return c.CapabilitiesOk
 }
-func (c *TestingContext) TranscriptStateValid() bool          { return c.TranscriptValid }
+func (c *TestingContext) TranscriptStateValid() bool                { return c.TranscriptValid }
 func (c *TestingContext) NegotiatedExtensionTypes() map[uint16]bool { return c.NegotiatedTypes }
 func (c *TestingContext) KnownExtensionTypes() map[uint16]bool      { return c.KnownTypes }
 
@@ -224,10 +224,10 @@ type ExtensionCallback interface {
 
 // ProcessedFrame is the result of successfully processing a frame.
 type ProcessedFrame struct {
-	Frame                    frame.Frame
-	Extensions               []frameext.Extension
-	ExtensionCallbackCount   int
-	ExtensionsIgnored        int
+	Frame                  frame.Frame
+	Extensions             []frameext.Extension
+	ExtensionCallbackCount int
+	ExtensionsIgnored      int
 }
 
 // FrameProcessingPipeline executes the 20-phase pipeline in order.

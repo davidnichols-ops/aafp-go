@@ -35,11 +35,11 @@ func TestConcurrentFrameEncodeDecode(t *testing.T) {
 				payload := []byte(fmt.Sprintf("goroutine-%d-iter-%d-payload", id, i))
 
 				f := frame.Frame{
-					Version:  1,
+					Version:   1,
 					FrameType: frame.TypeData,
-					Flags:    0,
-					StreamID: streamID,
-					Payload:  payload,
+					Flags:     0,
+					StreamID:  streamID,
+					Payload:   payload,
 				}
 
 				encoded, err := frame.Encode(&f)
@@ -199,10 +199,10 @@ func TestConcurrentMixedOperations(t *testing.T) {
 			case 0:
 				// Frame encode/decode
 				f := frame.Frame{
-					Version:  1,
+					Version:   1,
 					FrameType: frame.TypeData,
-					StreamID: uint64(id),
-					Payload:  []byte{byte(id), byte(id >> 8)},
+					StreamID:  uint64(id),
+					Payload:   []byte{byte(id), byte(id >> 8)},
 				}
 				enc, _ := frame.Encode(&f)
 				_, _, err := frame.Decode(enc)

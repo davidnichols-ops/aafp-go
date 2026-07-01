@@ -67,10 +67,10 @@ func TestEncodeDecodeWithExtensions(t *testing.T) {
 
 func TestPayloadTooLargeEncode(t *testing.T) {
 	f := &Frame{
-		Version:    Version,
-		FrameType:  TypeData,
-		StreamID:   1,
-		Payload:    make([]byte, MaxPayloadSize+1),
+		Version:   Version,
+		FrameType: TypeData,
+		StreamID:  1,
+		Payload:   make([]byte, MaxPayloadSize+1),
 	}
 	_, err := Encode(f)
 	if err == nil {
@@ -177,11 +177,11 @@ func TestInvalidVersion(t *testing.T) {
 
 func TestUnknownCriticalFrameType(t *testing.T) {
 	f := &Frame{
-		Version:    Version,
-		FrameType:  0xFF, // unknown
-		Flags:      FlagCritical,
-		StreamID:   1,
-		Payload:    []byte("test"),
+		Version:   Version,
+		FrameType: 0xFF, // unknown
+		Flags:     FlagCritical,
+		StreamID:  1,
+		Payload:   []byte("test"),
 	}
 	encoded, err := Encode(f)
 	if err != nil {
@@ -195,11 +195,11 @@ func TestUnknownCriticalFrameType(t *testing.T) {
 
 func TestUnknownNonCriticalFrameType(t *testing.T) {
 	f := &Frame{
-		Version:    Version,
-		FrameType:  0xFF, // unknown
-		Flags:      0,    // no critical bit
-		StreamID:   1,
-		Payload:    []byte("test"),
+		Version:   Version,
+		FrameType: 0xFF, // unknown
+		Flags:     0,    // no critical bit
+		StreamID:  1,
+		Payload:   []byte("test"),
 	}
 	encoded, err := Encode(f)
 	if err != nil {

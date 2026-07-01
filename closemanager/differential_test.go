@@ -20,19 +20,19 @@ type CloseEventVec struct {
 
 // CloseActionVec represents an expected action result.
 type CloseActionVec struct {
-	Kind            string `json:"kind"`
-	Code            uint32 `json:"code,omitempty"`
-	Message         string `json:"message,omitempty"`
-	MessageTruncated bool  `json:"message_truncated,omitempty"`
+	Kind             string `json:"kind"`
+	Code             uint32 `json:"code,omitempty"`
+	Message          string `json:"message,omitempty"`
+	MessageTruncated bool   `json:"message_truncated,omitempty"`
 }
 
 // CloseTraceVector represents a complete shutdown trace.
 type CloseTraceVector struct {
-	Name               string            `json:"name"`
-	Description        string            `json:"description"`
-	Events             []CloseEventVec   `json:"events"`
-	ExpectedFinalState string            `json:"expected_final_state"`
-	ExpectedActions    []CloseActionVec  `json:"expected_actions"`
+	Name               string           `json:"name"`
+	Description        string           `json:"description"`
+	Events             []CloseEventVec  `json:"events"`
+	ExpectedFinalState string           `json:"expected_final_state"`
+	ExpectedActions    []CloseActionVec `json:"expected_actions"`
 }
 
 // CloseTraceVectors is the top-level vector file.
