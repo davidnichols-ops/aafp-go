@@ -1,3 +1,5 @@
+> **Unmaintained as of 2026-10-16.** Not a current project. The tree is kept so the history stays public. Do not expect updates, installs, or maintenance. Current work is [trustcard](https://github.com/davidnichols-ops/trustcard) and [apple-quality-recognition-engine](https://github.com/davidnichols-ops/apple-quality-recognition-engine).
+
 # AAFP-Go: Independent Second Implementation
 
 An independent implementation of the AAFP v1 protocol in Go, written
